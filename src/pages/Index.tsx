@@ -107,39 +107,60 @@ const Index = () => {
 
   const playBackgroundMusic = () => {
     const audioContext = getAudioContext();
-    const melody = [
-      { freq: 523.25, duration: 0.3 },
-      { freq: 587.33, duration: 0.3 },
-      { freq: 659.25, duration: 0.3 },
-      { freq: 698.46, duration: 0.3 },
-      { freq: 783.99, duration: 0.6 },
-      { freq: 698.46, duration: 0.3 },
-      { freq: 659.25, duration: 0.3 },
-      { freq: 587.33, duration: 0.6 }
-    ];
-
-    let currentTime = audioContext.currentTime;
+    const now = audioContext.currentTime;
+    const beatDuration = 0.5;
     
-    melody.forEach(note => {
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.frequency.value = note.freq;
-      gainNode.gain.setValueAtTime(0.1, currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, currentTime + note.duration);
-      
-      oscillator.start(currentTime);
-      oscillator.stop(currentTime + note.duration);
-      
-      currentTime += note.duration;
-    });
-
+    const playBass = (time: number, freq: number) => {
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+      osc.type = 'sawtooth';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.3, time);
+      gain.gain.exponentialRampToValueAtTime(0.01, time + beatDuration);
+      osc.start(time);
+      osc.stop(time + beatDuration);
+    };
+    
+    const playKick = (time: number) => {
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+      osc.frequency.setValueAtTime(150, time);
+      osc.frequency.exponentialRampToValueAtTime(40, time + 0.1);
+      gain.gain.setValueAtTime(0.5, time);
+      gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+      osc.start(time);
+      osc.stop(time + 0.1);
+    };
+    
+    const playHihat = (time: number) => {
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+      osc.type = 'square';
+      osc.frequency.value = 8000;
+      gain.gain.setValueAtTime(0.05, time);
+      gain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
+      osc.start(time);
+      osc.stop(time + 0.05);
+    };
+    
+    const bassLine = [65, 65, 73, 73, 82, 82, 73, 65];
+    
+    for (let i = 0; i < 8; i++) {
+      const t = now + i * beatDuration;
+      playBass(t, bassLine[i]);
+      playKick(t);
+      if (i % 2 === 1) playHihat(t);
+    }
+    
     setTimeout(() => {
       if (isPlaying) playBackgroundMusic();
-    }, 2500);
+    }, 4000);
   };
 
   const toggleMusic = () => {
